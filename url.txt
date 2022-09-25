@@ -1,0 +1,7 @@
+1. git hub
+
+https://github.com/KapilsRepo/Udacity-devops-udapeople
+
+2. circle ci
+
+https://app.circleci.com/pipelines/github/KapilsRepo

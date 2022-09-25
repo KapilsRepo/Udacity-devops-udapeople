@@ -1,1 +1,1 @@
-# UDACITY-DEVOPS-UDAPEOPLE app
+# udacity-devops-UDAPEOPLE app

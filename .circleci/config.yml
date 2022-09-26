@@ -7,6 +7,7 @@ version: 2.1
 ## iteration-4 generate alerts using slack
 ## iteration-5 deploy infrastructure and simulate failure
 ## iteration-6 deploy infrastructure successfully
+## iteration-7 provide status of migration even on kvdb.io
 orbs:
   slack: circleci/slack@4.10.1
 commands:
@@ -235,7 +236,43 @@ jobs:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
-
+  run-migrations:
+    docker:
+      # Docker image here that supports NodeJS
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Install key dependencies in the docker
+          command: |
+            pip install awscli
+            apk add --update curl nodejs npm
+      - attach-workspace:
+          at: ~/  
+      - run:
+          name: Install additional dependencies
+          command: |
+            npm install            
+          name: Run migrations
+          command: |
+            # Your code here
+            cd backend
+            npm install
+            npm run migrations > migrations_dump.txt
+            cat migration_dump.txt
+      - run:
+          name: Send migration status to kvdb.io
+          command: |
+            if grep -q "has been executed successfully" ~/project/backend/migrations_dump.txt
+            then
+                curl https://kvdb.io/6h9wPbrfcMHffrSixfsDx2/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            fi
+      - destroy-environment:
+          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+     # Here's where you will add some code to rollback on failure      
 workflows:
   default:
     jobs:
@@ -257,4 +294,6 @@ workflows:
             branches:
               only: [main]
       - configure-infrastructure:
-          requires: [deploy-infrastructure]              
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]              

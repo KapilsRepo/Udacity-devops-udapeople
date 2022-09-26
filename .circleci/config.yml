@@ -7,7 +7,7 @@ version: 2.1
 ## iteration-4 generate alerts using slack
 ## iteration-5 deploy infrastructure and simulate failure
 ## iteration-6 deploy infrastructure successfully
-## iteration-7 provide status of migration even on kvdb.io
+## iteration-7 provide status of migration even on kvdb.io to retrieve it later.
 orbs:
   slack: circleci/slack@4.10.1
 commands:
@@ -260,6 +260,7 @@ jobs:
           command: |
             cd backend
             npm i
+            npm audit --audit-level=critical
             npm run migrations >> migration_result.txt
       - run:
           name: display results

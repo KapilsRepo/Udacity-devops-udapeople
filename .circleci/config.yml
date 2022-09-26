@@ -151,7 +151,7 @@ jobs:
   deploy-dependencies:
     docker:
       - image: python:3.7-alpine3.11
-      steps:
+    steps:
       - checkout
       - run:
           name: Install Dependencies

@@ -197,8 +197,8 @@ jobs:
               --output text)
               echo $EC2ip_ADD
               echo "[all]" > .circleci/ansible/inventory.txt
-              echo "EC2ip_ADD"
-              echo "EC2ip_ADD" >> .circleci/ansible/inventory.txt                   
+              echo "$EC2ip_ADD"
+              echo "$EC2ip_ADD" >> .circleci/ansible/inventory.txt                   
       - persist_to_workspace:
           root: ~/
           paths:
@@ -208,7 +208,34 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-      # Here's where you will add some code to rollback on failure       
+      # Here's where you will add some code to rollback on failure 
+  configure-infrastructure:
+    docker:
+      # Docker image here that supports Ansible
+      - image: python:3.7-alpine3.11      
+    steps:
+      - checkout
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints: ["de:16:25:3d:45:09:52:8c:35:bb:75:6a:08:8c:67:a5"]
+      # attach workspace
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            pip install awscli
+            apk add --update curl nodejs npm ansible zip
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible/
+            ansible-playbook -i ./inventory.txt configure-server.yml
+      - destroy-environment:
+          workflowId: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - slack/notify:
+          event: fail
+
 workflows:
   default:
     jobs:
@@ -229,3 +256,5 @@ workflows:
           filters:
             branches:
               only: [main]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]              

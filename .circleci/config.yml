@@ -162,16 +162,16 @@ jobs:
 #              apk add --update curl tar
   deploy-infrastructure:
     docker:
-#      - image: amazon/aws-cli      # Docker image here that supports AWS CLI
-      - image: python:3.7-alpine3.11
+      - image: amazon/aws-cli      # Docker image here that supports AWS CLI
+#      - image: python:3.7-alpine3.11
     steps:
       - checkout
       - run:
           name: Install Dependencies
           command: |
-              apk add --update curl tar   
-              python3 -m pip install --upgrade pip
-              pip install aws cli 
+              yum install -y tar gzip  
+ #             python3 -m pip install --upgrade pip
+ #             pip install aws cli 
       - checkout
       - run:
           name: Ensure back-end infrastructure exists

@@ -5,7 +5,8 @@ version: 2.1
 ## iteration-2 test front-end and back-end
 ## iteration-3 analyse front-end and back-end; generate necessary alerts on email.
 ## iteration-4 generate alerts using slack
-## iteration-5 deploy infrastructure
+## iteration-5 deploy infrastructure and simulate failure
+## iteration-6 deploy infrastructure successfully
 orbs:
   slack: circleci/slack@4.10.1
 commands:

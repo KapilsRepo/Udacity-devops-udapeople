@@ -170,6 +170,7 @@ jobs:
           name: Install Dependencies
           command: |
               apk add --update curl tar   
+              python -m pip install --upgrade pip
               pip install aws cli 
       - checkout
       - run:

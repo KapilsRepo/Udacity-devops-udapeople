@@ -11,14 +11,16 @@ commands:
   destroy-environment:
     description: Destroy back-end and front-end in case of failures
     parameters:
-      # Add parameter here   
+      circlewrkflowid:
+        type: string   
     steps:
       - run:
           name: Destroy environments
           when: on_fail
           command: |
-            # Your code here
-            exit 1
+            aws cloudformation delete-stack --stack-name udapeople-backend-<<parameters.circleworkflowid>>
+            aws s3 rm s3://udapeople-<<parameters.circleworkflowid>>
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<<parameters.circleworkflowid>>
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -157,7 +159,6 @@ jobs:
           name: Install Dependencies
           command: |
               apk add --update curl tar
-
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli      # Docker image here that supports AWS CLI
@@ -219,4 +220,4 @@ workflows:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
-              only: [test-feature-branch]
+              only: [main]

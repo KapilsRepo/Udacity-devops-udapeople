@@ -239,23 +239,24 @@ jobs:
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
-      - image: circleci/node:13.8.0
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
       - run:
           name: Install key dependencies in the docker
           command: |
-#            pip install awscli
-            sudo apt-get update && sudo apt-get install -yy less
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+            pip install awscli
+            apk add --update curl nodejs npm
+#            sudo apt-get update && sudo apt-get install -yy less
+#            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+#            unzip awscliv2.zip
+#            sudo ./aws/install
       - attach_workspace:
           at: ~/  
       - run:
           name: Install additional dependencies
           command: |
-            apk add --update curl nodejs npm
+#            apk add --update curl nodejs npm
             npm install 
       - run:          
           name: Run migrations

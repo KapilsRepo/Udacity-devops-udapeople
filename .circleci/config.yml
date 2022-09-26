@@ -159,7 +159,6 @@ jobs:
           name: Install Dependencies
           command: |
               apk add --update curl tar
-
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli      # Docker image here that supports AWS CLI

@@ -245,18 +245,22 @@ jobs:
       - run:
           name: Install key dependencies in the docker
           command: |
-            pip install awscli
-            apk add --update curl nodejs npm
+#            pip install awscli
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - attach_workspace:
           at: ~/  
       - run:
           name: Install additional dependencies
           command: |
+            apk add --update curl nodejs npm
             npm install 
-      - run:           
+      - run:          
           name: Run migrations
           command: |
-            # Your code here
+#           Your code here
             cd backend
             npm install
             npm run migrations > migrations_dump.txt

@@ -3,6 +3,10 @@ version: 2.1
 ##  built and how it would be taken through various phases of build, test, smoke test and deploy. 
 ## iteration-1 build front-end and back-end
 ## iteration-2 test front-end and back-end
+## iteration-3 analyse front-end and back-end; generate necessary alerts on email.
+## iteration-4 generate alerts using slack
+orbs:
+  slack: circleci/slack@4.10.1
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -127,7 +131,8 @@ jobs:
           command: |
               cd backend
               npm install
-              npm audit fix --audit-level=critical --force
+              npm audit --audit-level=critical
+#              npm audit fix --audit-level=critical --force
 
 workflows:
   default:

@@ -5,6 +5,7 @@ version: 2.1
 ## iteration-2 test front-end and back-end
 ## iteration-3 analyse front-end and back-end; generate necessary alerts on email.
 ## iteration-4 generate alerts using slack
+## iteration-5 deploy infrastructure
 orbs:
   slack: circleci/slack@4.10.1
 commands:
@@ -150,19 +151,26 @@ jobs:
           event: fail
           template: basic_fail_1
           
-  deploy-dependencies:
+#  deploy-dependencies:
+#    docker:
+#      - image: python:3.7-alpine3.11
+#    steps:
+#      - checkout
+#      - run:
+#          name: Install Dependencies
+#          command: |
+#              apk add --update curl tar
+  deploy-infrastructure:
     docker:
+#      - image: amazon/aws-cli      # Docker image here that supports AWS CLI
       - image: python:3.7-alpine3.11
     steps:
       - checkout
       - run:
           name: Install Dependencies
           command: |
-              apk add --update curl tar
-  deploy-infrastructure:
-    docker:
-      - image: amazon/aws-cli      # Docker image here that supports AWS CLI
-    steps:
+              apk add --update curl tar   
+              pip install aws cli 
       - checkout
       - run:
           name: Ensure back-end infrastructure exists
@@ -214,10 +222,10 @@ workflows:
           requires: [build-frontend]    
       - scan-backend:
           requires: [build-backend]
-      - deploy-dependencies:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+#      - deploy-dependencies:
+#          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       - deploy-infrastructure:
-          requires: [deploy-dependencies]
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: [main]

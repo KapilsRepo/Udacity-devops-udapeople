@@ -247,12 +247,13 @@ jobs:
           command: |
             pip install awscli
             apk add --update curl nodejs npm
-      - attach-workspace:
+      - attach_workspace:
           at: ~/  
       - run:
           name: Install additional dependencies
           command: |
-            npm install            
+            npm install 
+      - run:           
           name: Run migrations
           command: |
             # Your code here

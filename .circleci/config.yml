@@ -7,7 +7,7 @@ version: 2.1
 ## iteration-4 generate alerts using slack
 ## iteration-5 deploy infrastructure and simulate failure
 ## iteration-6 deploy infrastructure successfully
-## iteration-7 provide status of migration even on kvdb.io to retrieve it later.
+## iteration-7 provide status of migration even on kvdb.io to retrieve it later.add
 orbs:
   slack: circleci/slack@4.10.1
 commands:
@@ -241,7 +241,8 @@ jobs:
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
-      - image: python:3.7-alpine3.11
+#      - image: python:3.7-alpine3.11
+      - image: circleci/node:14.18.1
     steps:
       - checkout
       - run:
@@ -261,8 +262,7 @@ jobs:
           command: |
             #!/bin/bash -eo pipefail
             cd backend
-            nvm install v14.18.1
-            npm iinstall
+            npm install
             npm audit --audit-level=critical
             npm run migrations >> migration_result.txt
       - run:

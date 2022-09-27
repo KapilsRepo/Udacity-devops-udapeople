@@ -10,6 +10,8 @@ version: 2.1
 ## iteration-7 provide status of migration even on kvdb.io to retrieve it later.add
 orbs:
   slack: circleci/slack@4.10.1
+  python: circleci/python@2.0.3
+
 commands:
   destroy-environment:
     description: Destroy back-end and front-end in case of failures

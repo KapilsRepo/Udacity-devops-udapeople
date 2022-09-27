@@ -247,12 +247,19 @@ jobs:
       - image: circleci/node:14.18.1
     steps:
       - checkout
-      - run:
-          name: Install key dependencies in the docker
-          command: |
-            apk add --update curl nodejs npm
+#      - run:
+#          name: Install key dependencies in the docker
+#          command: |
+#            apk add --update curl nodejs npm
       - attach_workspace:
           at: ~/  
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Install additional dependencies
           command: |          
@@ -264,7 +271,7 @@ jobs:
             #!/bin/bash -eo pipefail
             cd backend
             npm install
-            npm audit --audit-level=critical
+#            npm audit --audit-level=critical
             npm run migrations >> migration_result.txt
       - run:
           name: display results

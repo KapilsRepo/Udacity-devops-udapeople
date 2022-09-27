@@ -211,7 +211,7 @@ jobs:
               echo "[all]" > .circleci/ansible/inventory.txt
               echo "$EC2ip_ADD"
               echo "$EC2ip_ADD" >> .circleci/ansible/inventory.txt
-              echo "$IP_ADDRESS" > .circleci/output/backend_api_ip.txt                   
+              echo "$EC2ip_ADD" > .circleci/output/backend_api_ip.txt                   
       - persist_to_workspace:
           root: ~/
           paths:

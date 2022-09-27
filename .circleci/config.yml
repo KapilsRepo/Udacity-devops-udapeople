@@ -11,8 +11,7 @@ version: 2.1
 orbs:
   slack: circleci/slack@4.10.1
   python: circleci/python@2.0.3
-  node: circleci/node:14.18.1
-
+  
 commands:
   destroy-environment:
     description: Destroy back-end and front-end in case of failures

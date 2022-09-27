@@ -250,7 +250,7 @@ jobs:
       - run:
           name: Install key dependencies in the docker
           command: |
-            pip install awscli
+#            pip install awscli
             apk add --update curl nodejs npm
       - attach_workspace:
           at: ~/  

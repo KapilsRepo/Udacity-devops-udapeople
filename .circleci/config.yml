@@ -253,16 +253,16 @@ jobs:
           at: ~/  
       - run:
           name: Install additional dependencies
-          command: |
-            #!/bin/bash -eo pipefail
-            cd backend
-            npm install
+          command: |          
+            cd backend            
             cp .env.sample .env
       - run:          
           name: Run migrations
           command: |
+            #!/bin/bash -eo pipefail
             cd backend
-            npm i
+            nvm install v14.18.1
+            npm iinstall
             npm audit --audit-level=critical
             npm run migrations >> migration_result.txt
       - run:

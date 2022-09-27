@@ -271,7 +271,6 @@ jobs:
             #!/bin/bash -eo pipefail
             cd backend
             npm install
-#            npm audit --audit-level=critical
             npm run migrations >> migration_result.txt
       - run:
           name: display results

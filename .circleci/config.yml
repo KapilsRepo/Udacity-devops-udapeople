@@ -254,6 +254,7 @@ jobs:
       - run:
           name: Install additional dependencies
           command: |
+            #!/bin/bash -eo pipefail
             cd backend
             npm install
             cp .env.sample .env

@@ -29,23 +29,14 @@ commands:
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
-    parameters:
-      # Add parameter here     
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
-            if(( $SUCCESS==1 )); 
-            then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
-            fi
-            
+            cd ~/backend
+            npm i
+            npm run migrations:revert            
 jobs:
   # Exercise: Creating a Simple Workflow
   # Exercise: Environment Variables
@@ -211,12 +202,12 @@ jobs:
               echo "[all]" > .circleci/ansible/inventory.txt
               echo "$EC2ip_ADD"
               echo "$EC2ip_ADD" >> .circleci/ansible/inventory.txt
-              echo "$EC2ip_ADD" > .circleci/output/backend_api_ip.txt                   
+              echo "$EC2ip_ADD" > .circleci/output/backend_ip_num.txt                   
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/ansible/inventory.txt
-            - project/.circleci/output/backend_api_ip.txt
+            - .circleci/ansible/inventory.txt
+            - .circleci/output/backend_ip_num.txt
       - destroy-environment:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
@@ -317,7 +308,7 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            export BACKEND_IP=`cat .circleci/output/backend_api_ip.txt`
+            export BACKEND_IP=`cat .circleci/output/backend_ip_num.txt`
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             cd ~/project/frontend
@@ -332,7 +323,38 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-      # Here's where you will add some code to rollback on failure      
+      # Here's where you will add some code to rollback on failure    
+  
+  deploy-backend:
+    docker:
+  #      - image: python:3.7-alpine3.11
+      - image: circleci/node:14.18.1
+    steps:
+      - checkout
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install      
+      - add_ssh_keys:
+          fingerprints: ["de:16:25:3d:45:09:52:8c:35:bb:75:6a:08:8c:67:a5"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Deploy backend
+          working_directory: ./.circleci/ansible
+          command: |
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-server.yml -vv
+      - destroy-environment:
+          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      # Here's where you will add some code to rollback on failure  
  
 workflows:
   default:
@@ -359,4 +381,6 @@ workflows:
 #      - run-migrations:
 #          requires: [configure-infrastructure]
       - deploy-frontend:
+          requires: [deploy-infrastructure]
+      - deploy-backend:
           requires: [deploy-infrastructure]

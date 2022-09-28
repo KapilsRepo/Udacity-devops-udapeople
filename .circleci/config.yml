@@ -335,7 +335,7 @@ jobs:
           name: Install dependencies
           working_directory: /tmp
           command: |
-            apk add --update ansible curl rsync openssh nodejs npm
+            apk add --update ansible curl rsync openssh nodejs npm zip
             ansible --version
             pip install awscli
             aws --version   
@@ -345,10 +345,18 @@ jobs:
           at: ~/
       - run:
           name: Deploy backend
-          working_directory: ./.circleci/ansible
           command: |
-            cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-server.yml -vv
+            cd ~/project/backend
+            npm install
+            npm run build
+            cp package.json dist
+            cd dist
+            zip -rq build.zip *
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv build.zip ~/project/.circleci/ansible/roles/deploy/files/
+            ls ~/project/.circleci/ansible/roles/deploy/files/
+            cd ~/project/.circleci/ansible/
+            ansible-playbook -i ./inventory.txt deploy-backend.yml
       - destroy-environment:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:

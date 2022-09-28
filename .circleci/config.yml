@@ -327,18 +327,18 @@ jobs:
   
   deploy-backend:
     docker:
-  #      - image: python:3.7-alpine3.11
-      - image: circleci/node:14.18.1
+       - image: python:3.7-alpine3.11
+  #    - image: circleci/node:14.18.1
     steps:
       - checkout
       - run:
-          name: Install AWS CLI dependencies
+          name: Install dependencies
           working_directory: /tmp
           command: |
-            sudo apt-get update && sudo apt-get install -yy less
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install      
+            apk add --update ansible curl rsync openssh nodejs npm
+            ansible --version
+            pip install awscli
+            aws --version   
       - add_ssh_keys:
           fingerprints: ["de:16:25:3d:45:09:52:8c:35:bb:75:6a:08:8c:67:a5"]
       - attach_workspace:

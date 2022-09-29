@@ -344,10 +344,11 @@ jobs:
           name: Install other dependencies
           working_directory: /tmp
           command: |
+            sudo apt-get update
+            sudo apt-get install npm
             sudo apt -y install gzip
             sudo apt install python3-pip
             sudo apt-get install curl
-            sudo apt-get install npm
             sudo apt-get install nodejs npm         
             sudo apt-get install ansible -y
             sudo apt-get install zip

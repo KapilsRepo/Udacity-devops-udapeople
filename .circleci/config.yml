@@ -356,8 +356,7 @@ jobs:
                  echo "$EC2ip_ADD"
                  echo "[web]" > .circleci/ansible/inventory.txt
                  echo $EC2ip_ADD >> .circleci/ansible/inventory.txt
-                 cat .circleci/ansible/inventory.txt
-                 
+                 cat .circleci/ansible/inventory.txt                 
 #            printenv >> ./backend/.env
 #            cd backend
 #            npm i

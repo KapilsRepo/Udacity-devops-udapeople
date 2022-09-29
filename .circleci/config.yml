@@ -342,6 +342,7 @@ jobs:
             apk add --update curl
             apk add --update nodejs npm
             apk add --update ansible 
+            apk add --update zip
       - add_ssh_keys:
           fingerprints: ["de:16:25:3d:45:09:52:8c:35:bb:75:6a:08:8c:67:a5"]
       - attach_workspace:
@@ -359,6 +360,7 @@ jobs:
                  cat .circleci/ansible/inventory.txt    
             cd ~/project/backend
             npm install
+            npm audit fix
             npm run build
             cp package.json dist
             cd dist
@@ -378,8 +380,8 @@ jobs:
 #            echo "Contents  of the inventory.txt file is -------"
 #            cat inventory.txt
 #            ansible-playbook -i inventory.txt deploy-backend.yml  
-#      - destroy-environment:
-#          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - destroy-environment:
+          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
           template: basic_fail_1

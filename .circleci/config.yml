@@ -345,7 +345,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["de:16:25:3d:45:09:52:8c:35:bb:75:6a:08:8c:67:a5"]
       - attach_workspace:
-          at: ~/
+          at: ~/           
       - run:
           name: Deploy backend
           command: |
@@ -356,17 +356,7 @@ jobs:
                  echo "$EC2ip_ADD"
                  echo "[web]" > .circleci/ansible/inventory.txt
                  echo $EC2ip_ADD >> .circleci/ansible/inventory.txt
-                 cat .circleci/ansible/inventory.txt                 
-#            printenv >> ./backend/.env
-#            cd backend
-#            npm i
-#            npm run build
-#            cd ..
-#            tar -C backend -czvf artifact.tar.gz .
-#            cd .circleci/ansible
-#            echo "Contents  of the inventory.txt file is -------"
-#            cat inventory.txt
-#            ansible-playbook -i inventory.txt deploy-backend.yml  
+                 cat .circleci/ansible/inventory.txt    
             cd ~/project/backend
             npm install
             npm run build
@@ -377,7 +367,17 @@ jobs:
             mv build.zip ~/project/.circleci/ansible/roles/deploy/files/
             ls ~/project/.circleci/ansible/roles/deploy/files/
             cd ~/project/.circleci/ansible/
-            ansible-playbook -i ./inventory.txt deploy-backend.yml
+            ansible-playbook -i ./inventory.txt deploy-backend.yml                              
+#            printenv >> ./backend/.env
+#            cd backend
+#            npm i
+#            npm run build
+#            cd ..
+#            tar -C backend -czvf artifact.tar.gz .
+#            cd .circleci/ansible
+#            echo "Contents  of the inventory.txt file is -------"
+#            cat inventory.txt
+#            ansible-playbook -i inventory.txt deploy-backend.yml  
 #      - destroy-environment:
 #          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:

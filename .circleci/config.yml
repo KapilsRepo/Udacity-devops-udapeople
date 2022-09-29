@@ -345,7 +345,6 @@ jobs:
           working_directory: /tmp
           command: |
             sudo apt-get update
-            sudo apt-get install npm
             sudo apt -y install gzip
             sudo apt install python3-pip
             sudo apt-get install curl  

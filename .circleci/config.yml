@@ -347,8 +347,7 @@ jobs:
             sudo apt -y install gzip
             sudo apt install python3-pip
             sudo apt-get install curl
-            sudo apt-get install nodejs
-            sudo apt-get install npm
+            sudo apt-get install nodejs npm         
             sudo apt-get install ansible -y
             sudo apt-get install zip
 #            apk add tar gzip

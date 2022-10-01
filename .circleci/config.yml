@@ -41,12 +41,18 @@ jobs:
   # Exercise: Creating a Simple Workflow
   # Exercise: Environment Variables
   # Exercise: Reusable Job Code 
+##########################
+#### PRINT GREETINGS #####
+########################## 
   print_greetings:
     docker:
       - image: circleci/node:14.18.1
     steps:
       - run: echo Welcome to UdaPeople!
-      - run: echo ${CIRCLE_WORKFLOW_ID}       
+      - run: echo ${CIRCLE_WORKFLOW_ID}    
+##########################
+#### BUILD FRONT-END #####
+##########################       
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -67,6 +73,9 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
+##########################
+#### BUILD BACK-END ######
+##########################         
   build-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -87,7 +96,9 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1          
-
+##########################
+#### TEST FRONT-END ######
+##########################  
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -104,7 +115,9 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-
+##########################
+#### TEST BACK-END ######
+##########################  
   test-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -121,7 +134,9 @@ jobs:
       - slack/notify:
           event: fail
           template: basic_fail_1
-
+##########################
+#### SCAN FRONT-END ######
+##########################  
   scan-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -134,10 +149,13 @@ jobs:
           command:  |
               cd frontend
               npm install
-              npm audit fix --audit-level=critical --force
+              npm audit fix --audit-level=critical
       - slack/notify:
           event: fail
           template: basic_fail_1    
+  ##########################
+  #### SCAN BACK-END #######
+  ##########################          
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -150,24 +168,16 @@ jobs:
           command: |
               cd backend
               npm install
-              npm audit fix --audit-level=critical --force
+              npm audit fix --audit-level=critical
       - slack/notify:
           event: fail
           template: basic_fail_1
-          
-#  deploy-dependencies:
-#    docker:
-#      - image: python:3.7-alpine3.11
-#    steps:
-#      - checkout
-#      - run:
-#          name: Install Dependencies
-#          command: |
-#              apk add --update curl tar
+  ##########################
+  #### DEPLOY INFRA ########
+  ########################## 
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli      # Docker image here that supports AWS CLI
-#      - image: python:3.7-alpine3.11
     steps:
       - checkout
       - run:
@@ -199,9 +209,8 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
               echo $EC2ip_ADD
-              echo "[all]" > .circleci/ansible/inventory.txt
-              echo "$EC2ip_ADD"
-              echo "$EC2ip_ADD" >> .circleci/ansible/inventory.txt
+              echo "[web]" > .circleci/ansible/inventory.txt              
+              echo "$EC2ip_ADD" > .circleci/ansible/inventory.txt
               echo "$EC2ip_ADD" > .circleci/output/backend_ip_num.txt                   
       - persist_to_workspace:
           root: ~/
@@ -214,6 +223,9 @@ jobs:
           event: fail
           template: basic_fail_1
       # Here's where you will add some code to rollback on failure 
+  ##########################
+  #### CONFIG INFRA ########
+  ##########################
   configure-infrastructure:
     docker:
       # Docker image here that supports Ansible
@@ -234,23 +246,24 @@ jobs:
       - run:
           name: Configure server
           command: |
+            ls /root
+            ls /root/project/backend
             cd .circleci/ansible/
+            cat ./inventory.txt
             ansible-playbook -i ./inventory.txt configure-server.yml
       - destroy-environment:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
+  ##########################
+  #### RUN MIGRATION #######
+  ##########################  
   run-migrations:
     docker:
-      # Docker image here that supports NodeJS
-#      - image: python:3.7-alpine3.11
-      - image: circleci/node:14.18.1
+#     - image: circleci/node:14.18.1
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-#      - run:
-#          name: Install key dependencies in the docker
-#          command: |
-#            apk add --update curl nodejs npm
       - attach_workspace:
           at: ~/  
           name: Install AWS CLI dependencies
@@ -264,7 +277,7 @@ jobs:
           name: Install additional dependencies
           command: |          
             cd backend            
-            cp .env.sample .env
+#            cp .env.sample .env
       - run:          
           name: Run migrations
           command: |
@@ -284,19 +297,23 @@ jobs:
             then
                 curl https://kvdb.io/6h9wPbrfcMHffrSixfsDx2/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}  -d '1'
             fi
-      - destroy-environment:
-          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
           template: basic_fail_1
-     # Here's where you will add some code to rollback on failure     
-
+     
+##########################
+#### DEPLOY FRONT-END ####
+##########################  
   deploy-frontend:
     docker:
-#      - image: python:3.7-alpine3.11
-      - image: circleci/node:14.18.1
+#     - image: circleci/node:14.18.1
+      - image: circleci/node:13.8.0
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/
+      - restore_cache:
+          keys: [frontend-build]
       - run:
           name: Install AWS CLI dependencies
           working_directory: /tmp
@@ -306,32 +323,58 @@ jobs:
             unzip awscliv2.zip
             sudo ./aws/install
       - run:
-          name: Get backend url
+          name: Install NPM
           command: |
+            cd frontend
+            sudo npm install webpack-dev-server -g
+            sudo npm install          
+      - run:
+          name: Install tar
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y tar
+      - run:
+          name: Get backend url
+          working_directory: /home/circleci/project/frontend
+          command: |
+            sudo
             export BACKEND_IP=`cat .circleci/output/backend_ip_num.txt`
+            echo "${BACKEND_IP}"
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            cd ~/project/frontend
-            npm install
-            npm run build
+            echo "API_URL=${API_URL}" >> .env
       - run:
           name: Deploy frontend objects
           command: |
-            aws s3 cp ~/project/frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}/ --recursive --acl public-read
-#      - destroy-environment:
-#          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
+            echo ENVIRONMENT=production >> frontend/.env
+            echo NODE_ENV=production >> frontend/.env
+            cd ~/project/frontend
+            npm install
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp ./dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}/ --recursive --acl public-read
+      - destroy-environment:
+          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
           template: basic_fail_1
       # Here's where you will add some code to rollback on failure    
-  
+##########################
+#### DEPLOY BACK-END ####
+##########################    
   deploy-backend:
     docker:
   #    - image: python:3.11-rc-alpine
-  #     - image: python:3.7-alpine3.11
-       - image: circleci/node:14.18.1
+       - image: python:3.7-alpine3.11
+  #     - image: circleci/node:14.18.1
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - add_ssh_keys:
+          fingerprints: ["de:16:25:3d:45:09:52:8c:35:bb:75:6a:08:8c:67:a5"]
+      - attach_workspace:
+          at: /~        
       - run:
           name: Install AWS CLI dependencies
           working_directory: /tmp
@@ -344,83 +387,59 @@ jobs:
           name: Install other dependencies
           working_directory: /tmp
           command: |
-            sudo apt-get update
-            sudo apt -y install gzip
-            sudo apt install python3-pip
-            sudo apt-get install curl  
-            sudo apt-get install ansible -y
-            sudo apt-get install zip
-#            apk add tar gzip
-#            apk update pip3
-#            pip3 install awscli
-#            apk add --update curl
-#            apk add --update nodejs npm
-#            apk add --update ansible 
-#            apk add --update zip
-      - add_ssh_keys:
-          fingerprints: ["de:16:25:3d:45:09:52:8c:35:bb:75:6a:08:8c:67:a5"]
-      - attach_workspace:
-          at: ~/           
+            apk add --update ansible openssh-client tar gzip nodejs npm    
       - run:
           name: Deploy backend
           command: |
-            EC2ip_ADD=$(aws ec2 describe-instances \
+            echo  ENVIRONMENT=production >> "backend/.env"
+            echo  NODE_ENV=production >> "backend/.env"
+            echo  TYPEORM_CONNECTION=postgres >> "backend/.env"
+            echo  TYPEORM_MIGRATIONS_DIR=.src/migrations >> "backend/.env"
+            echo  TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+            echo  TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo  TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo  TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"          
+            echo  TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo  TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo  TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+            cd  backend
+            npm i
+            npm run build
+            cd ..
+            tar -C backend -czvf artifact.tar.gz
+            cd .circleci/ansible
+            BACKEND_ip=$(aws ec2 describe-instances \
                   --query 'Reservations[*].Instances[*].PublicIpAddress' \
                   --filters "Name=tag:project,Values=udapeople" \
                   --output text)
-                 echo "$EC2ip_ADD"
-                 echo "[web]" > .circleci/ansible/inventory.txt
-                 echo $EC2ip_ADD >> .circleci/ansible/inventory.txt
-                 cat .circleci/ansible/inventory.txt    
-            cd ~/project/backend
-            npm install
-            npm audit fix --audit-level=critical
-            npm run build
-            cp package.json dist
-            cd dist
-            zip -rq build.zip *
-            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-            mv build.zip ~/project/.circleci/ansible/roles/deploy/files/
-            ls ~/project/.circleci/ansible/roles/deploy/files/
-            cd ~/project/.circleci/ansible/
-            ansible-playbook -i ./inventory.txt deploy-backend.yml                              
-#            printenv >> ./backend/.env
-#            cd backend
-#            npm i
-#            npm run build
-#            cd ..
-#            tar -C backend -czvf artifact.tar.gz .
-#            cd .circleci/ansible
-#            echo "Contents  of the inventory.txt file is -------"
-#            cat inventory.txt
-#            ansible-playbook -i inventory.txt deploy-backend.yml  
+                 echo $BACKEND_ip >> .circleci/ansible/inventory.txt
+                 cat .circleci/ansible/inventory.txt   
+            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/deploy-backend.yml
       - destroy-environment:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
-          template: basic_fail_1
-      # Here's where you will add some code to rollback on failure  
- 
+          template: basic_fail_1  
+
+##########################
+#### DEFINE WORKFLOW  ####
+##########################             
 workflows:
   default:
     jobs:
       - print_greetings
-#      - build-frontend
-#      - build-backend
-#      - test-frontend:
-#          requires: [build-frontend]
-#      - test-backend:
-#          requires: [build-backend]    
-#      - scan-frontend:
-#          requires: [build-frontend]    
-#      - scan-backend:
-#          requires: [build-backend]    
-#      - deploy-infrastructure:
-#          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-#          filters:
-#            branches:
-#              only: [main]
-      - deploy-infrastructure                 
+      - build-frontend
+      - build-backend
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]    
+      - scan-frontend:
+          requires: [build-frontend]    
+      - scan-backend:
+          requires: [build-backend]    
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:

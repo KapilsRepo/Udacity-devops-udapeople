@@ -238,7 +238,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["de:16:25:3d:45:09:52:8c:35:bb:75:6a:08:8c:67:a5"]
+          fingerprints: ["0c:3a:9d:14:f8:a6:83:48:57:67:e0:13:81:8a:e6:e9"]
       # attach workspace
       - attach_workspace:
           at: ~/
@@ -255,8 +255,8 @@ jobs:
             cd .circleci/ansible/
             cat ./inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
-      - destroy-environment:
-          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
+#      - destroy-environment:
+#          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
   ##########################

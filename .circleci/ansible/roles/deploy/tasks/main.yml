@@ -29,8 +29,8 @@
 - name: Uncompress Backend
   become: yes
   shell: |
-    cd /home/ubuntu/
-    tar xvzf artifact.tar.gz -C /home/ubuntu/
+    cd /home/ubuntu/backend
+    tar -C backend -czvf artifact.tar.gz .
     ls -la
 
 - name: Install node

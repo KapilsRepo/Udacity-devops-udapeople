@@ -208,9 +208,13 @@ jobs:
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
-              echo $EC2ip_ADD                          
-              echo "$EC2ip_ADD" > .circleci/ansible/inventory.txt
-              echo "$EC2ip_ADD" > .circleci/output/backend_ip_num.txt                   
+              echo $EC2ip_ADD 
+
+              echo "[web]" > .circleci/ansible/inventory.txt                         
+              echo "$EC2ip_ADD" >> .circleci/ansible/inventory.txt
+              echo "$EC2ip_ADD" > .circleci/output/backend_ip_num.txt  
+              cat   .circleci/ansible/inventory.txt
+                               
       - persist_to_workspace:
           root: ~/
           paths:
@@ -250,7 +254,7 @@ jobs:
             ls /root/project/backend
             cd .circleci/ansible/
             cat ./inventory.txt
-            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/configure-server.yml
+            ansible-playbook -i inventory.txt configure-server.yml
       - destroy-environment:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
@@ -297,6 +301,8 @@ jobs:
             then
                 curl https://kvdb.io/6h9wPbrfcMHffrSixfsDx2/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}  -d '1'
             fi
+      - destroy-environment:
+          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -442,9 +448,9 @@ workflows:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
-      - deploy-frontend:
-          requires: [run-migrations]
-      - deploy-backend:
-          requires: [deploy-frontend]
+#      - run-migrations:
+#          requires: [configure-infrastructure]
+#      - deploy-frontend:
+#          requires: [run-migrations]
+#      - deploy-backend:
+#          requires: [deploy-frontend]

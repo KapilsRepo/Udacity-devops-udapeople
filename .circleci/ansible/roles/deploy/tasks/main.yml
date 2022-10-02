@@ -26,12 +26,10 @@
     src: ~/project/artifact.tar.gz
     dest: /home/ubuntu/backend
 
-- name: Uncompress Backend
-  become: yes
-  shell: |
-    cd /home/ubuntu/backend
-    tar -C backend -czvf artifact.tar.gz .
-    ls -la
+- name: Extract and add Artifacts to EC2 instance
+  unarchive:
+    src: ~/project/artifact.tar.gz
+    dest: /home/ubuntu/backend
 
 - name: Install node
   become: yes

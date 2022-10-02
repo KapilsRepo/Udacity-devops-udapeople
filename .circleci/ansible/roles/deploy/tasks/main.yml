@@ -30,7 +30,7 @@
   become: yes
   shell: |
     cd /home/ubuntu/
-    tar xvzf artifact.tar.gz -C .
+    tar xvzf artifact.tar.gz -C /home/ubuntu/
     ls -la
 
 - name: Install node

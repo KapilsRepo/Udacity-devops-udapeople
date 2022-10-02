@@ -347,57 +347,57 @@ jobs:
   deploy-backend:     
     docker:
         - image: python:3.7-alpine3.11
-      steps:
-        - checkout
-        - restore_cache:
-            keys: [backend-build]
-        - add_ssh_keys:
+    steps:
+       - checkout
+       - restore_cache:
+           keys: [backend-build]
+       - add_ssh_keys:
             fingerprints: ["0c:3a:9d:14:f8:a6:83:48:57:67:e0:13:81:8a:e6:e9"]
-        - attach_workspace:
-            at: /~        
-        - run:
-            name: Install dependencies
-            command: |
-              apk add --update ansible openssh-client tar gzip nodejs npm
-              pip install awscli 
-        - run:
-            name: Deploy backend
-            command: |
-              printenv >> ./backend/.envnew
-              echo  ENVIRONMENT=production >> "backend/.env"
-              echo  NODE_ENV=production >> "backend/.env"
-              echo  TYPEORM_CONNECTION=postgres >> "backend/.env"
-              echo  TYPEORM_MIGRATIONS_DIR=.src/migrations >> "backend/.env"
-              echo  TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
-              echo  TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
-              echo  TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
-              echo  TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"          
-              echo  TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
-              echo  TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
-              echo  TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
-              cat   backend/.env
-              cat   backend/.envnew
-              cd  backend
-              npm i
-              npm run build
-              cd ..
-              tar -C backend -czvf artifact.tar.gz
-              cd .circleci/ansible
-              BACKEND_ip=$(aws ec2 describe-instances \
-                    --query 'Reservations[*].Instances[*].PublicIpAddress' \
-                    --filters "Name=tag:project,Values=udapeople" \
-                    --output text)
-              echo $BACKEND_ip >> .circleci/ansible/inventory.txt
-              cat .circleci/ansible/inventory.txt 
-              export ANSIBLE_HOST_KEY_CHECKING=False  
-              ansible-playbook -i inventory.txt deploy-backend.yml
-        - destroy-environment:
-           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
-        - slack/notify:
-            event: fail
-            template: basic_fail_1  
+       - attach_workspace:
+           at: /~        
+       - run:
+           name: Install dependencies
+           command: |
+             apk add --update ansible openssh-client tar gzip nodejs npm
+             pip install awscli 
+       - run:
+           name: Deploy backend
+           command: |
+             printenv >> ./backend/.envnew
+             echo  ENVIRONMENT=production >> "backend/.env"
+             echo  NODE_ENV=production >> "backend/.env"
+             echo  TYPEORM_CONNECTION=postgres >> "backend/.env"
+             echo  TYPEORM_MIGRATIONS_DIR=.src/migrations >> "backend/.env"
+             echo  TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+             echo  TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+             echo  TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+             echo  TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"          
+             echo  TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+             echo  TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+             echo  TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+             cat   backend/.env
+             cat   backend/.envnew
+             cd  backend
+             npm i
+             npm run build
+             cd ..
+             tar -C backend -czvf artifact.tar.gz
+             cd .circleci/ansible
+             BACKEND_ip=$(aws ec2 describe-instances \
+                   --query 'Reservations[*].Instances[*].PublicIpAddress' \
+                   --filters "Name=tag:project,Values=udapeople" \
+                   --output text)
+             echo $BACKEND_ip >> .circleci/ansible/inventory.txt
+             cat .circleci/ansible/inventory.txt 
+             export ANSIBLE_HOST_KEY_CHECKING=False  
+             ansible-playbook -i inventory.txt deploy-backend.yml
+       - destroy-environment:
+          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
+       - slack/notify:
+           event: fail
+           template: basic_fail_1  
 
-            
+
 ##########################
 #### DEFINE WORKFLOW  ####
 ##########################             

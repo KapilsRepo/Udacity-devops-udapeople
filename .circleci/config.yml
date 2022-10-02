@@ -361,8 +361,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible openssh-client tar gzip nodejs npm
+            apk add --update ansible openssh-client tar zip nodejs npm
             pip install awscli 
+            
       - run:
           name: Deploy backend
           command: |
@@ -376,6 +377,16 @@ jobs:
             mv build.zip ~/project/.circleci/ansible/roles/deploy/files/
             ls ~/project/.circleci/ansible/roles/deploy/files/
             cd ~/project/.circleci/ansible/
+
+            BACKEND_AWS_PUBLIC_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            echo "$BACKEND_AWS_PUBLIC_IP" >> .circleci/ansible/inventory.txt 
+            echo "$BACKEND_AWS_PUBLIC_IP"
+            cat ~/project/.circleci/ansible/inventory.txt
+            
+            export ANSIBLE_HOST_KEY_CHECKING=False            
             ansible-playbook -i ./inventory.txt deploy-backend.yml
 #      - destroy-environment:
 #          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"

@@ -396,7 +396,7 @@ jobs:
           circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
 
 ##########################
-#### DEFINE WORKFLOW  ####
+#### DEFINE WORKFLOW  #####
 ##########################             
 workflows:
   default:

@@ -1,58 +1,45 @@
----
-- name: Install Dependencies
-  become: yes
+- name: Install unzip
+  become: true
   apt:
-    name: ["nodejs", "npm"]
-    state: latest
+    name: unzip
     update_cache: yes
 
-- name: Install pm2
-  become: yes
-  npm:
-    name: pm2
-    global: yes
-    production: yes
-    state: present
-
-- name: Creates Directory
-  become: yes
+- name: "Creates new directory for backend"
   file:
-    path: /home/ubuntu/backend
+    path: ~/app
     state: directory
 
-- name: Copy backend dist files web server
-  become: yes
+- name: "Copy build archive"
   copy:
-    src: ~/project/artifact.tar.gz
-    dest: /home/ubuntu/backend
+    src: build.zip
+    dest: "~/app/build.zip"
 
-- name: Extract and add Artifacts to EC2 instance
-  unarchive:
-    src: ~/project/artifact.tar.gz
-    dest: /home/ubuntu/backend
-
-- name: Install node
-  become: yes
+- name: "Unzip build archive"
   shell: |
-    cd /home/ubuntu/backend
+    cd ~/app
+    unzip -o build.zip
+    
+- name: "Install dependencies"
+  shell: |
+    cd ~/app
     npm install
-    npm install --only=dev    
 
-- name: Build
+- name: "Executing node"
   shell: |
-    cd /home/ubuntu/backend
-    npm run build
-    cat .env
-    npm run prestart:prod
+    export
+    cd ~/app
+    pm2 start main.js
+  register: execute_node
+  environment:
+    ENVIRONMENT: "production"
+    TYPEORM_CONNECTION: "{{ lookup('env','TYPEORM_CONNECTION') }}"
+    TYPEORM_HOST: "{{ lookup('env','TYPEORM_HOST') }}"
+    TYPEORM_USERNAME: "{{ lookup('env','TYPEORM_USERNAME') }}"
+    TYPEORM_PASSWORD: "{{ lookup('env','TYPEORM_PASSWORD') }}"
+    TYPEORM_DATABASE: "{{ lookup('env','TYPEORM_DATABASE') }}"
+    TYPEORM_MIGRATIONS: "{{ lookup('env','TYPEORM_MIGRATIONS') }}"
+    TYPEORM_ENTITIES: "{{ lookup('env','TYPEORM_ENTITIES') }}"
 
-- name: Start PM2
-  shell: |
-    cd /home/ubuntu/backend
-    pm2 stop default
-    pm2 start npm --name backend -- start
-
-- name: start pm2 for dist/main.js 
-  become: no
-  shell: pm2 starter main.js
-  args:
-    chdir: /home/ubuntu/backend/dist
+- name: print message
+  debug:
+    msg: "{{ execute_node.stdout_lines }}"

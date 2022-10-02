@@ -349,7 +349,18 @@ jobs:
 ##########################    
   deploy-backend:     
     docker:
-        - image: python:3.7-alpine3.11
+      - image: python:3.7-alpine3.11
+        environment:
+          NODE_ENV: "production"
+          VERSION: "1"
+          ENVIRONMENT: "production"
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES       
     steps:
       - checkout
       - restore_cache:
@@ -361,33 +372,19 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible openssh-client tar zip nodejs npm
+            apk add --update ansible nodejs npm tar gzip
             pip install awscli 
             
       - run:
           name: Deploy backend
           command: |
-            cd ~/project/backend
+            cd backend
             npm install
             npm run build
-            cp package.json dist
-            cd dist
-            zip -rq build.zip *
-            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-            mv build.zip ~/project/.circleci/ansible/roles/deploy/files/
-            ls ~/project/.circleci/ansible/roles/deploy/files/
-            cd ~/project/.circleci/ansible/
-
-            BACKEND_AWS_PUBLIC_IP=$(aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text)
-            echo "$BACKEND_AWS_PUBLIC_IP" >> .circleci/ansible/inventory.txt 
-            echo "$BACKEND_AWS_PUBLIC_IP"
+            cd ..
+            tar -C backend -czvf artifact.tar.gz .
             cat ~/project/.circleci/ansible/inventory.txt
-            
-            export ANSIBLE_HOST_KEY_CHECKING=False            
-            ansible-playbook -i ./inventory.txt deploy-backend.yml
+            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/deploy-backend.yml
 #      - destroy-environment:
 #          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:

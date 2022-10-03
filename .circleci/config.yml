@@ -415,7 +415,7 @@ jobs:
             ls -la
             echo "Contents of the inventory.txt file is...."
             cat inventory.txt
-            cp artifact_back.tar.gz /project/.circleci/ansible/roles/deploy/files
+#            cp artifact_back.tar.gz /project/.circleci/ansible/roles/deploy/files
             ansible-playbook -i inventory.txt deploy-backend.yml
 #      - destroy-environment:
 #          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -490,18 +490,20 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
-      - test-frontend:
-          requires:
-            - build-frontend
-      - test-backend:
-          requires:
-            - build-backend
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
+#      - test-frontend:
+#          requires:
+#            - build-frontend
+#      - test-backend:
+#          requires:
+#            - build-backend
+#      - scan-backend:
+#          requires: [build-backend]
+#      - scan-frontend:
+#          requires: [build-frontend]
+#      - deploy-infrastructure:
+#          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+           requires: [build-backend, build-frontend]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:

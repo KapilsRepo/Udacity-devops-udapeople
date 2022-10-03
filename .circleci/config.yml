@@ -234,6 +234,15 @@ jobs:
     docker:
       # Docker image here that supports Ansible
       - image: python:3.7-alpine3.11  
+        environment:
+          ENVIRONMENT: "production"
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
     steps:
       - checkout
       # Add ssh keys with fingerprint
@@ -251,9 +260,9 @@ jobs:
       - run:
           name: Configure server
           command: |
+            cat ~/project/.circleci/ansible/inventory.txt
+            export ANSIBLE_HOST_KEY_CHECKING=False      
             cd .circleci/ansible/
-            cat ./inventory.txt
-            export ANSIBLE_HOST_KEY_CHECKING=False            
             ansible-playbook -i inventory.txt configure-server.yml
 #      - destroy-environment:
 #          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
@@ -277,6 +286,7 @@ jobs:
           command: |            
             cd backend
             npm install
+            touch migrations_result.txt
             npm run migrations >> migration_result.txt
             cat migration_result.txt
       - run:
@@ -337,7 +347,7 @@ jobs:
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp ./dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}/ --recursive --acl public-read
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}/ --recursive --acl public-read
       - destroy-environment:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
@@ -351,12 +361,12 @@ jobs:
       - image: cimg/python:3.10
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/      
       - restore_cache:
           keys: [backend-build]
       - add_ssh_keys:
           fingerprints: ["0c:3a:9d:14:f8:a6:83:48:57:67:e0:13:81:8a:e6:e9"]
-      - attach_workspace:
-          at: /~     
       - run:
           name: Install dependencies
           command: |

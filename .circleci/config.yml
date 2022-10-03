@@ -348,7 +348,6 @@ jobs:
 ##########################
 #### DEPLOY BACK-END ####
 ##########################    
-
   deploy-backend:
     docker:
       - image: cimg/python:3.10

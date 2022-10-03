@@ -7,7 +7,7 @@
 - name: "Unarchive backend files"
   become: true
   unarchive:
-    src: artifact_back.tar.gz
+    src: /project/.circleci/ansible/artifact_back.tar.gz
     dest: ~/backend
 - name: "Installing Node Dependencies"
   become: true

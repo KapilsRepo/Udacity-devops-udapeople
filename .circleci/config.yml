@@ -348,9 +348,10 @@ jobs:
 ##########################
 #### DEPLOY BACK-END ####
 ##########################    
+
   deploy-backend:
     docker:
-      - image: python:3.7-alpine3.11
+      - image: cimg/python:3.10
     steps:
       - checkout
       - restore_cache:
@@ -358,44 +359,57 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["0c:3a:9d:14:f8:a6:83:48:57:67:e0:13:81:8a:e6:e9"]
       - attach_workspace:
-          at: /~     
+          at: ~/
+      - run:
+          name: install ansible
+          command: |
+            sudo apt update
+            sudo apt install software-properties-common
+            sudo add-apt-repository --yes --update ppa:ansible/ansible
+            sudo apt install ansible -y
+      - run:
+          name: install aws cli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+       - run:
+          name: Install Node.js 13.8.0
+          command: |
+            # workaround to demote to version 13.8.0 by installining latest version
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+            sudo apt install -y nodejs
+            # Use n version manager to use Node.js v13.8.0
+            sudo npm install --global n
+            sudo n 13.8.0
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible openssh-client tar gzip nodejs npm
-            pip install awscli 
-      - run:
-          name: Deploy backend
-          working_directory: /home/circleci/project/backend
-          command: |
-            echo ENVIRONMENT=production >> "backend/.env"
-            echo NODE_ENV=production >> "backend/.env"
-            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
-            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
-            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
-            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
             cd backend
             npm install
+      - run:
+          name: Package Backend
+          command: |
+            cd backend
             npm run build
-            cp package* ./dist
+            tar -czf artifact.tar.gz dist/* package*
             cd ..
-            tar -C backend -czvf artifact.tar.gz .
-            BACKEND_AWS_PUBLIC_IP=$(aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text)
-            echo "$BACKEND_AWS_PUBLIC_IP" >> .circleci/ansible/inventory.txt 
-            cat ~/project/.circleci/ansible/inventory.txt
-            export ANSIBLE_HOST_KEY_CHECKING=False
-            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/deploy-backend.yml
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+      - run:
+          name: Deploy backend
+          command: |
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*.ts
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
       - destroy-environment:
           circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
-
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+ 
   front-end-smoke-test:
     docker:
       - image: python:3.7-alpine3.11

@@ -399,10 +399,11 @@ jobs:
             tar -czvf artifact_back.tar.gz dist/* package*
             tar --list --file=artifact_back.tar.gz
             cd ..
-            cp backend/artifact_back.tar.gz .circleci/ansible
+            cp backend/artifact_back.tar.gz .circleci/ansible/roles/deploy/files
       - persist_to_workspace:
           root: ~/
           paths:
+            - project/.circleci/ansible
             - project/.circleci/ansible/artifact_back.tar.gz
       - run:
           name: Deploy backend

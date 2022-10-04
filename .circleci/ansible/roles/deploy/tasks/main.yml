@@ -11,11 +11,16 @@
     path: /home/ubuntu/backend-zip
     state: directory
 
-- name: Copy backend dist files web server
-  ansible.builtin.unarchive:
+- name: "Copy build archive"
+  copy:
     src: artifact_back.tar.gz
-    dest: /home/ubuntu/backend-app
-    remote_src: yes
+    dest: "~/backend-app/artifact_back.tar.gz"
+
+
+- name: "Unzip build archive"
+  shell: |
+    cd ~/artifact_back.tar.gz
+    unzip -o artifact_back.tar.gz
 
 - name: "Installing Node Dependencies"
   become: true

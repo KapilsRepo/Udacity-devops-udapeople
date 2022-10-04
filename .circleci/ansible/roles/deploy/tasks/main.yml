@@ -15,6 +15,7 @@
   copy:
     src: artifact_back.tar.gz
     dest: "~/backend-app/artifact_back.tar.gz"
+    remote_src: yes 
 
 
 - name: "Unzip build archive"

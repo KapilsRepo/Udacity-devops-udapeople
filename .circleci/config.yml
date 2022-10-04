@@ -400,23 +400,25 @@ jobs:
             tar -czvf artifact_back.tar.gz dist/* package*
             tar --list --file=artifact_back.tar.gz
             pwd
-            ls -la
-            cd ..
-            export ANSIBLE_HOST_KEY_CHECKING=False
-            cp backend/artifact_back.tar.gz .circleci/ansible/roles/deploy/files
+            ls -la           
       - persist_to_workspace:
           root: ~/
           paths:
-            - circleci/project/backend/artifact_back.tar.gz 
+            - circleci/project/backend
             - project/.circleci/ansible
             - project/.circleci/ansible/artifact_back.tar.gz
       - run:
           name: Deploy backend
+          working_directory: /home/circleci/project/backend  
           command: |
+            pwd 
+            ls -la
             export TYPEORM_MIGRATIONS_DIR=./migrations
             export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
             export TYPEORM_MIGRATIONS=./migrations/*.ts
-            cd .circleci/ansible
+            mkdir -p ~/.circleci/ansible/roles/deploy/files/
+            cp artifact_back.tar.gz ~/.circleci/ansible/roles/deploy/files/
+            cd ~/.circleci/ansible
             ls -la
             echo "Contents of the inventory.txt file is...."
             cat inventory.txt

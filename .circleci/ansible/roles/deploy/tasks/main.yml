@@ -13,7 +13,7 @@
 
 - name: Copy backend dist files web server
   ansible.builtin.unarchive:
-    src: ~/circleci/project/backend/artifact_back.tar.gz
+    src: artifact_back.tar.gz
     dest: /home/ubuntu/backend-app
     remote_src: yes
 

@@ -4,7 +4,7 @@
   file:
     path: /home/ubuntu/backend-app
     state: directory
-    
+
 - name: "Creates backend zip directory"
   become: true
   file:
@@ -20,9 +20,11 @@
     find . -name artifact_front.tar.gz
 
 - name: Copy backend dist files web server
+  become: true
   ansible.builtin.unarchive:
     src: ~/project/backend/artifact_back.tar.gz
     dest: /home/ubuntu/backend-app
+    remote_src: yes
 
 - name: "Installing Node Dependencies"
   become: true

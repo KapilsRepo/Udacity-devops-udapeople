@@ -391,21 +391,43 @@ jobs:
             sudo npm install --global n
             sudo n 13.8.0     
       - run:
+          name: Package Backend
+          working_directory: /home/circleci/project/backend    
+          command: |    
+            cd ~/project/backend
+            npm install
+            npm run build                  
+            tar -czvf artifact_back.tar.gz dist/* package*
+            tar --list --file=artifact_back.tar.gz
+            pwd
+            ls -la           
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - circleci/project/backend
+            - project/.circleci/ansible
+            - project/.circleci/ansible/artifact_back.tar.gz
+      - run:
           name: Deploy backend
+          working_directory: /home/circleci/project/backend  
           command: |
-            mkdir -p .circleci/ansible/roles/deploy/files
-            cd backend
-            npm i
-            npm run build
-            cp ~/project/backend/package.json ~/project/backend/dist
-            # Zip the directory
-            cd ~/project/backend/dist
-            zip -rq dist.zip *
-            mv dist.zip ~/project/.circleci/ansible/roles/deploy/files/
-
+            pwd 
+            ls -la
+            cp artifact_back.tar.gz ~/project/.circleci
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*.ts
+            cd ~/project/.circleci/
+            ls -la
+            mkdir -p ~/ansible/roles/deploy/files/
+            cp artifact_back.tar.gz ~/ansible/roles/deploy/files/
+            cd ~/ansible/roles/deploy/files/
+            ls -la
             cd ~/project/.circleci/ansible
-            echo "Contents of the inventory.txt file is ......."
+            ls -la
+            echo "Contents of the inventory.txt file is...."
             cat inventory.txt
+            export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i inventory.txt deploy-backend.yml
 #      - destroy-environment:
 #          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}

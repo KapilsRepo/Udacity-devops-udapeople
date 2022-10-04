@@ -423,7 +423,7 @@ jobs:
             cp artifact_back.tar.gz ~/ansible/roles/deploy/files/
             cd ~/ansible/roles/deploy/files/
             ls -la
-            cd ~/project/.circleci
+            cd ~/project/.circleci/ansible
             ls -la
             echo "Contents of the inventory.txt file is...."
             cat inventory.txt

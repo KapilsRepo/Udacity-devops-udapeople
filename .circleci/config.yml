@@ -406,7 +406,7 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/backend 
+            - project/backend/artifact_back.tar.gz 
             - project/.circleci/ansible
             - project/.circleci/ansible/artifact_back.tar.gz
       - run:

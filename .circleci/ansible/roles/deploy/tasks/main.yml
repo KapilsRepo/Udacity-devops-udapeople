@@ -9,26 +9,19 @@
   file:
     path: ~/backend-zip
     state: directory
-    
+
 - name: "Temp - Show working directory"
   become: true
   shell: |
     pwd
     ls -la
+    echo $pwd
     find . -name artifact_front.tar.gz
 
-- name: "create a copy of the zip file"
-  become: true
-  ansible.builtin.copy:
-    src: /root/project/backend/artifact_front.tar.gz
-    dest: ~/backend-zip
-    remote_src: yes    
-
-- name: "Unarchive backend files"
-  become: true
-  unarchive:
-    src: ~/backend-zip/artifact_front.tar.gz
-    dest: ~/backend-app
+- name: Copy backend dist files web server
+  ansible.builtin.unarchive:
+    src: ~/project/backend/artifact_back.tar.gz
+    dest: /home/ubuntu/backend
 
 - name: "Installing Node Dependencies"
   become: true

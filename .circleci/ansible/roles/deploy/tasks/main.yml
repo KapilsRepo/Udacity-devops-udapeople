@@ -2,7 +2,7 @@
 - name: "Creates backend app directory"
   become: true
   file:
-    path: /home/ubuntu/backend
+    path: /home/ubuntu/backend-app
     state: directory
 
 - name: "Creates backend zip directory"
@@ -11,17 +11,9 @@
     path: /home/ubuntu/backend-zip
     state: directory
 
-- name: "Temp - Show working directory"
-  become: true
-  shell: |
-    pwd
-    ls -la
-    echo $pwd
-    find . -name artifact_front.tar.gz
-
 - name: Copy backend dist files web server
   ansible.builtin.unarchive:
-    src: ~/project/backend/artifact_back.tar.gz
+    src: ~/circleci/project/backend/artifact_back.tar.gz
     dest: /home/ubuntu/backend-app
     remote_src: yes
 

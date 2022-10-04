@@ -21,7 +21,7 @@
 - name: Copy backend dist files web server
   ansible.builtin.unarchive:
     src: ~/project/backend/artifact_back.tar.gz
-    dest: /home/ubuntu/backend
+    dest: /home/ubuntu/backend-app
 
 - name: "Installing Node Dependencies"
   become: true

@@ -43,8 +43,8 @@
   shell: |
     sudo su -c "env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu"
     pm2 save
-
- environment:
+    
+  environment:
     ENVIRONMENT: production
     TYPEORM_CONNECTION: "{{ lookup('env','TYPEORM_CONNECTION') }}"
     TYPEORM_MIGRATIONS_DIR: /home/ubuntu/backend-app/migrations

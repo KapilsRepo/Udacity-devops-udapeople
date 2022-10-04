@@ -413,14 +413,15 @@ jobs:
           command: |
             pwd 
             ls -la
+            cp artifact_back.tar.gz ~/project/.circleci
             export TYPEORM_MIGRATIONS_DIR=./migrations
             export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
             export TYPEORM_MIGRATIONS=./migrations/*.ts
             cd ~/project/.circleci/
             ls -la
             mkdir -p ~/ansible/roles/deploy/files/
-            cp /home/circleci/project/backend/artifact_back.tar.gz ~/.circleci/ansible/roles/deploy/files/
-            cd ~/project/.circleci/ansible/roles/deploy/files/
+            cp artifact_back.tar.gz ~/ansible/roles/deploy/files/
+            cd ~/ansible/roles/deploy/files/
             ls -la
             cd ~/project/.circleci
             ls -la

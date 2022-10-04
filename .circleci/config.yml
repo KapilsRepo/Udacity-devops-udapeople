@@ -392,7 +392,7 @@ jobs:
             sudo n 13.8.0     
       - run:
           name: Package Backend
-          working_directory: /home/circleci/project/backend          
+          working_directory: /home/project/backend          
           command: |    
             cd ~/project/backend
             npm install
@@ -402,6 +402,7 @@ jobs:
             pwd
             ls -la
             cd ..
+            export ANSIBLE_HOST_KEY_CHECKING=False
             cp backend/artifact_back.tar.gz .circleci/ansible/roles/deploy/files
       - persist_to_workspace:
           root: ~/

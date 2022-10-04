@@ -8,7 +8,7 @@ version: 2.1
 ## iteration-5 deploy infrastructure and simulate failure
 ## iteration-6 deploy infrastructure successfully
 ## iteration-7 provide status of migration even on kvdb.io to retrieve it 
-## re-build new test
+## re-build new test2
 orbs:
   slack: circleci/slack@4.10.1
   python: circleci/python@2.0.3

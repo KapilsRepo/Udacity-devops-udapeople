@@ -2,24 +2,40 @@
 - name: "Creates backend app directory"
   become: true
   file:
-    path: ~/backend
+    path: ~/backend-app
     state: directory
+- name: "Creates backend zip directory"
+  become: true
+  file:
+    path: ~/backend-zip
+    state: directory
+
+- name: "create a copy of the zip file"
+  become: true
+  ansible.builtin.copy:
+    src: /root/project/backend/artifact_front.tar.gz
+    dest: ~/backend-zip
+    remote_src: yes    
+
 - name: "Unarchive backend files"
   become: true
   unarchive:
-    src: /root/project/backend/artifact_front.tar.gz
-    dest: ~/backend
+    src: ~/backend-zip/artifact_front.tar.gz
+    dest: ~/backend-app
+
 - name: "Installing Node Dependencies"
   become: true
   shell: |
-    cd ~/backend
+    cd ~/backend-app
     npm i
+    
 - name: "Executing Node app with PM2"
   shell: |
     cd ~/backend-app/dist
     pm2 stop default
     pm2 start main.js
   register: execute_node
+  
 - name: print message
   debug:
     msg: "{{ execute_node.stdout_lines }}"

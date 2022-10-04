@@ -392,6 +392,7 @@ jobs:
             sudo n 13.8.0     
       - run:
           name: Package Backend
+          working_directory: /home/circleci/project/backend          
           command: |    
             cd ~/project/backend
             npm install

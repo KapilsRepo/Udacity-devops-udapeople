@@ -2,12 +2,13 @@
 - name: "Creates backend app directory"
   become: true
   file:
-    path: ~/backend-app
+    path: /home/ubuntu/backend-app
     state: directory
+    
 - name: "Creates backend zip directory"
   become: true
   file:
-    path: ~/backend-zip
+    path: /home/ubuntu/backend-zip
     state: directory
 
 - name: "Temp - Show working directory"
@@ -26,7 +27,7 @@
 - name: "Installing Node Dependencies"
   become: true
   shell: |
-    cd ~/backend-app
+    cd /home/ubuntu/backend-app
     npm i
     
 - name: "Executing Node app with PM2"

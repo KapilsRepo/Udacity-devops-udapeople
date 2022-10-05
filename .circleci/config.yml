@@ -30,14 +30,26 @@ commands:
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
+    parameters:
+      circlewrkflowid:
+        type: string   
     steps:
       - run:
           name: Revert migrations
           when: on_fail
           command: |
-            cd ~/backend
-            npm i
-            npm run migrations:revert            
+            # Get kvdb url
+            SUCCESS=$(curl --insecure https://kvdb.io/6h9wPbrfcMHffrSixfsDx2/migration_<<parameters.circlewrkflowid>>)
+            # Logic for reverting the database state
+            if (($SUCCESS == 1)); then
+              echo "Reverting migrations..."
+              cd ~/project/backend
+              npm install
+              npm run migrations:revert
+            else
+              echo "No migrations to revert."
+            fi
+           
 jobs:
   # Exercise: Creating a Simple Workflow
   # Exercise: Environment Variables
@@ -273,8 +285,8 @@ jobs:
   ##########################  
   run-migrations:
     docker:
-      - image: circleci/node:14.18.1
-#      - image: circleci/node:13.8.0
+#      - image: circleci/node:14.18.1
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
@@ -287,8 +299,8 @@ jobs:
             cd backend
             npm install
             touch migrations_result.txt
-            npm run migrations >> migration_result.txt
-            cat migration_result.txt
+            npm run migrations >> migration_dump.txt
+            cat migration_dump.txt
       - run:
           name: Send migration status to kvdb.io
           command: |
@@ -296,8 +308,8 @@ jobs:
             then
                 curl https://kvdb.io/6h9wPbrfcMHffrSixfsDx2/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}  -d '1'
             fi
-#      - destroy-environment:
-#          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
+      - destroy-environment:
+          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
           template: basic_fail_1     
@@ -346,8 +358,8 @@ jobs:
             cd ~/project/frontend
             npm install
             npm run build
-            tar -czvf artifact_front.tar.gz dist
-            tar --list --file=artifact_front.tar.gz
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            tar --list --file=artifact-"${CIRCLE_WORKFLOW_ID:0:7}"
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}/ --recursive --acl public-read
       - destroy-environment:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
@@ -400,23 +412,26 @@ jobs:
             cp ~/project/backend/package.json ~/project/backend/dist
             # Zip the directory
             cd ~/project/backend/dist
-            zip -rq dist.zip *
-            mv dist.zip ~/project/.circleci/ansible/roles/deploy/files/
+            zip -rq artifact.zip *
+            mv artifact.zip ~/project/.circleci/ansible/roles/deploy/files/
 
             cd ~/project/.circleci/ansible
             echo "Contents of the inventory.txt file is ......."
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
-#      - destroy-environment:
-#          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy-environment:
+          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
       - slack/notify:
           event: fail
           template: basic_fail_1
-###################################
-##### SMOKE TEST###################
-###################################          
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
+########################
+##### SMOKE TEST########
+########################
  
-  front-end-smoke-test:
+  Smoke-test:
     docker:
       - image: python:3.7-alpine3.11
     steps:
@@ -434,27 +449,10 @@ jobs:
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"
             if curl -s ${URL} | grep "Welcome"
             then
-              return 0
+              return 1
             else
               return 1
             fi 
-#      - destroy-environment:
-#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-#      - revert-migrations:
-#          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
-
-  back-end-smoke-test:
-    docker:
-      - image: python:3.7-alpine3.11
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /root
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --update curl
-            pip install awscli
       - run:
           name: Backend smoke test.
           command: |
@@ -470,7 +468,82 @@ jobs:
             else
               return 1
             fi
+      - destroy-environment:
+          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
+  
+########################
+##### Promotion Phase###
+########################
+  Promotion-Phase:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["0c:3a:9d:14:f8:a6:83:48:57:67:e0:13:81:8a:e6:e9"]
+      - run: yum install -y tar gzip
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Get old stack workflow id
+          command: |
+            # Fetch the old stack workflow id
+            export OLD_WORKFLOW_ID=$(aws cloudformation \
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            aws cloudformation deploy --template-file .circleci/files/cloudfront.yml \
+            --stack-name InitialStack \
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople
+            echo "Cloudfront distribution updated"
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - slack/notify:
+          channel: $SLACK_DEFAULT_CHANNEL
+          event: fail
+          template: basic_fail_1
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+  
+  # Cleanup phase
+  cleanup:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Get old stack workflow id
+          command: |
+            # Fetch the old stack workflow id
+            export OLD_WORKFLOW_ID=$(aws cloudformation \
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
+            echo OLD_WORKFLOW_ID: "${OLD_WORKFLOW_ID}"
+
+            # Fetch the stack names
+            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+            --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+            echo "Stack names are ${STACKS[@]}"
+
+            # Condition to remove stacks/s3 bucket
+            #if [[ "${OLD_WORKFLOW_ID}" =~ "${STACKS[@]}"  ]]
+            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" =~ "${OldWorkflowID}" ]]
+            then
+              echo "Removing stacks/s3 bucket"
+              # Remove stacks
+              aws s3 rm "s3://udapeople-${OLD_WORKFLOW_ID}" --recursive
+              aws cloudformation delete-stack --stack-name "udapeople-backend-${OLD_WORKFLOW_ID}"
+              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OLD_WORKFLOW_ID}"
+            fi
 
 ##########################
 #### DEFINE WORKFLOW  #####
@@ -478,6 +551,7 @@ jobs:
 workflows:
   default:
     jobs:
+      - print_greetings
       - build-frontend
       - build-backend
 #      - test-frontend:
@@ -502,7 +576,11 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      - front-end-smoke-test:
+      - smoke-test:
           requires: [deploy-backend, deploy-frontend]
       - back-end-smoke-test:
           requires: [front-end-smoke-test]
+      - Promotion-Phase:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [Promotion-Phase]

@@ -1,13 +1,13 @@
 ---
 - name: Create directory
   file:
-    path: /home/ubuntu/udaappdir
+    path: /home/ubuntu/backend-app
     state: directory
 
 - name: Upload artifact
   copy:
-    src: ~/project/.circleci/ansible/roles/deploy/files/dist.zip
-    dest: /home/ubuntu/udaappdir
+    src: ~/project/.circleci/ansible/roles/deploy/files/artifact.zip
+    dest: /home/ubuntu/backend-app
 
 - name: Install unzip
   become: yes
@@ -18,17 +18,17 @@
 # Extract the zipped artifact into the EC2 instance, and then start the app.
 - name: extract artifact
   shell: |
-    cd /home/ubuntu/udaappdir
-    unzip /home/ubuntu/udaappdir/dist.zip
+    cd /home/ubuntu/backend-app
+    unzip /home/ubuntu/backend-app/artifact.zip
     npm install
     pm2 stop default
     pm2 start -f ./main.js
   environment:
     ENVIRONMENT: production
     TYPEORM_CONNECTION: "{{ lookup('env','TYPEORM_CONNECTION') }}"
-    TYPEORM_MIGRATIONS_DIR: /home/ubuntu/udaappdir/migrations
-    TYPEORM_MIGRATIONS: /home/ubuntu/udaappdir/migrations/*.js
-    TYPEORM_ENTITIES: /home/ubuntu/udaappdir/modules/domain/**/*.entity.js
+    TYPEORM_MIGRATIONS_DIR: /home/ubuntu/backend-app/migrations
+    TYPEORM_MIGRATIONS: /home/ubuntu/backend-app/migrations/*.js
+    TYPEORM_ENTITIES: /home/ubuntu/backend-app/modules/domain/**/*.entity.js
     TYPEORM_HOST: "{{ lookup('env','TYPEORM_HOST') }}"
     TYPEORM_PORT: "{{ lookup('env','TYPEORM_PORT') }}"
     TYPEORM_USERNAME: "{{ lookup('env','TYPEORM_USERNAME') }}"

@@ -578,8 +578,6 @@ workflows:
           requires: [run-migrations]
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
-      - back-end-smoke-test:
-          requires: [front-end-smoke-test]
       - Promotion-Phase:
           requires: [smoke-test]
       - cleanup:

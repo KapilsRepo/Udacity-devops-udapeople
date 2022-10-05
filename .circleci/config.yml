@@ -425,7 +425,7 @@ jobs:
           event: fail
           template: basic_fail_1
       - revert-migrations:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
 
 ########################
 ##### SMOKE TEST########
@@ -474,7 +474,7 @@ jobs:
           event: fail
           template: basic_fail_1
       - revert-migrations:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
 
   
 ########################
@@ -506,13 +506,13 @@ jobs:
             --tags project=udapeople
             echo "Cloudfront distribution updated"
       - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
       - slack/notify:
           channel: $SLACK_DEFAULT_CHANNEL
           event: fail
           template: basic_fail_1
       - revert-migrations:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          circlewrkflowid: ${CIRCLE_WORKFLOW_ID:0:7}
   
   # Cleanup phase
   cleanup:

@@ -296,8 +296,10 @@ jobs:
       - run:                 
           name: Install dependencies
           command: |
-            apk add --update curl
-            pip install awscli
+            sudo apt-get -y -qq update
+            sudo apt-get -y -qq install python3
+            sudo apt-get -qq install awscli
+            sudo apt-get -y -qq install curl
       - run:          
           name: Run migrations
           command: |            

@@ -92,7 +92,7 @@ jobs:
   build-backend:
     docker:
 #      - image: circleci/node:13.8.0
-      - image circleci/node:14.18.1
+      - image: circleci/node:14.18.1
     steps:
       - checkout
       - restore_cache:
@@ -424,15 +424,18 @@ jobs:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
-
+            
             mkdir -p .circleci/ansible/roles/deploy/files
             cd backend
             cat .env
             npm i
             npm run build
             cp ~/project/backend/package.json ~/project/backend/dist
+            cp ~/project/backend/package-lock.json ~/project/backend/dist
+            
             # Zip the directory
             cd ~/project/backend/dist
+            ls -la
             zip -rq artifact.zip *
             mv artifact.zip ~/project/.circleci/ansible/roles/deploy/files/
 

@@ -1,32 +1,23 @@
 ---
-- name: Create directory
-  file:
-    path: /home/ubuntu/backend-app
-    state: directory
-
-- name: Upload artifact
+- name: "Copy backend files to EC2 instance"
   copy:
-    src: ~/project/.circleci/ansible/roles/deploy/files/artifact.zip
-    dest: /home/ubuntu/backend-app
+    src: /root/project/artifact.tar.gz
+    dest: /home/ubuntu
 
-- name: Install unzip
-  become: yes
-  apt:
-    name: unzip
-    state: present
+- name: "unarchive directory"
+  unarchive:
+    src: /home/ubuntu/artifact.tar.gz
+    dest: /home/ubuntu
+    copy: no
 
-# Extract the zipped artifact into the EC2 instance.
-- name: extract artifact
+- name: "Install dependencies"
   shell: |
-    cd /home/ubuntu/backend-app
-    unzip /home/ubuntu/backend-app/artifact.zip
-
-# Build the app
-- name : Build Backend
-  shell:
-    cd  /home/ubuntu/backend-app
+    cd /home/ubuntu/backend
     npm install
-    pm2 stop default
-    pm2 start npm -- run start
-    cd /home/ubuntu/backend-app/dist
-    pm2 start -f ./main.js
+    npm run build
+
+- name : "Run backend app"
+  shell: |
+    cd  /home/ubuntu/backend
+    pm2 start npm --name backend -- start
+    pm2 ls

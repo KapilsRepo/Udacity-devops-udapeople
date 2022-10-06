@@ -393,7 +393,7 @@ jobs:
           name: Install dependencies
           command: |
             pip install awscli
-            apk add openssh-client
+
             apk add --update tar unzip gzip zip curl nodejs npm ansible
       - run:
           name: Deploy backend
@@ -423,7 +423,7 @@ jobs:
             ls -la
             zip -rq artifact.zip *
             mv artifact.zip ~/project/.circleci/ansible/roles/deploy/files/
-
+            ls -la
             cd ~/project/.circleci/ansible
             echo "Contents of the inventory.txt file is ......."
             cat inventory.txt

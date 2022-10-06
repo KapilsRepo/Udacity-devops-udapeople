@@ -415,15 +415,17 @@ jobs:
             cat .env
             npm i
             npm run build
-            cp ~/project/backend/package.json ~/project/backend/dist
-            cp ~/project/backend/package-lock.json ~/project/backend/dist
             
             # Zip the directory
             cd ~/project/backend/dist
+            echo "before zip"
             ls -la
             zip -rq artifact.zip *
+            echo "after zip"
+            ls -la
             mv artifact.zip ~/project/.circleci/ansible/roles/deploy/files/
             ls -la
+            
             cd ~/project/.circleci/ansible
             echo "Contents of the inventory.txt file is ......."
             cat inventory.txt

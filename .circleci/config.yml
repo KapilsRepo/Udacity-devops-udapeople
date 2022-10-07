@@ -11,7 +11,6 @@ version: 2.1
 ## re-build new test update2
 orbs:
   slack: circleci/slack@4.10.1
-  python: circleci/python@2.0.3
   
 commands:
   destroy-environment:
@@ -24,8 +23,9 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
+            echo "Detroy Environment for <<parameters.circlewrkflowid>>"
+            aws s3 rm s3://udapeople-<<parameters.circlewrkflowid>> --recursive
             aws cloudformation delete-stack --stack-name udapeople-backend-<<parameters.circlewrkflowid>>
-            aws s3 rm s3://udapeople-<<parameters.circlewrkflowid>>
             aws cloudformation delete-stack --stack-name udapeople-frontend-<<parameters.circlewrkflowid>>
 
   revert-migrations:
@@ -59,7 +59,7 @@ jobs:
 ########################## 
   print_greetings:
     docker:
-      - image: circleci/node:14.18.1
+      - image: circleci/node:13.8.0
     steps:
       - run: echo Welcome to UdaPeople!
       - run: echo ${CIRCLE_WORKFLOW_ID}    
@@ -91,8 +91,8 @@ jobs:
 ##########################         
   build-backend:
     docker:
-#      - image: circleci/node:13.8.0
-      - image: circleci/node:14.18.1
+      - image: circleci/node:13.8.0
+#      - image: circleci/node:14.18.1
     steps:
       - checkout
       - restore_cache:
@@ -126,6 +126,9 @@ jobs:
              cd frontend
              npm install
              npm run test
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-build
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -145,6 +148,9 @@ jobs:
               cd backend
               npm install
               npm run test
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -163,7 +169,11 @@ jobs:
           command:  |
               cd frontend
               npm install
-              npm audit fix --audit-level=critical
+              npm audit fix --audit-level=critical --force
+              npm audit --audit-level=critical
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-build
       - slack/notify:
           event: fail
           template: basic_fail_1    
@@ -182,7 +192,10 @@ jobs:
           command: |
               cd backend
               npm install
-              npm audit fix --audit-level=critical
+              npm audit fix --audit-level=critical --force
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
       - slack/notify:
           event: fail
           template: basic_fail_1
@@ -247,15 +260,6 @@ jobs:
     docker:
       # Docker image here that supports Ansible
       - image: python:3.7-alpine3.11  
-        environment:
-          ENVIRONMENT: "production"
-          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
-          TYPEORM_HOST: $TYPEORM_HOST
-          TYPEORM_USERNAME: $TYPEORM_USERNAME
-          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
-          TYPEORM_DATABASE: $TYPEORM_DATABASE
-          TYPEORM_PORT: $TYPEORM_PORT
-          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
     steps:
       - checkout
       # Add ssh keys with fingerprint
@@ -273,6 +277,18 @@ jobs:
       - run:
           name: Configure server
           command: |
+            echo ENVIRONMENT=production > backend/.env
+            echo TYPEORM_CONNECTION=postgres >> backend/.env
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> backend/.env
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> backend/.env
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> backend/.env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env" 
+            cat backend/.env
+
             cat ~/project/.circleci/ansible/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=False      
             cd .circleci/ansible/
@@ -286,7 +302,6 @@ jobs:
   ##########################  
   run-migrations:
     docker:
-#      - image: circleci/node:14.18.1
       - image: circleci/node:13.8.0
     steps:
       - checkout

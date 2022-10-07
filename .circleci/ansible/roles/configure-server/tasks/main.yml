@@ -1,11 +1,20 @@
-- name: "Install NodeJs"
+---
+- name: "upgrade packages."
   become: true
-  shell: |
-    apt -y upgrade
-    apt install -y nodejs
-    apt install -y npm
+  apt:
+    upgrade: "yes"
 
-- name: "Install pm2"
+- name: "install dependencies."
   become: true
-  shell: |
-    npm install pm2 -g
+  apt:
+    name: ["nodejs", "npm"]
+    state: latest
+    update_cache: yes
+
+- name: "install pm2"
+  become: true
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present

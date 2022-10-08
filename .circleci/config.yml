@@ -258,7 +258,7 @@ jobs:
       - checkout
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["85:5f:45:35:90:91:0d:46:88:f8:e0:11:ef:2c:67:25"]
+          fingerprints: ["58:33:41:c7:3f:30:a4:76:24:48:5a:91:f4:2f:ab:c6"]
       # attach workspace
       - attach_workspace:
           at: ~/
@@ -396,7 +396,7 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       - add_ssh_keys:
-          fingerprints: ["85:5f:45:35:90:91:0d:46:88:f8:e0:11:ef:2c:67:25"]
+          fingerprints: ["58:33:41:c7:3f:30:a4:76:24:48:5a:91:f4:2f:ab:c6"]
       - run:
           name: Install dependencies
           command: |
@@ -496,7 +496,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["85:5f:45:35:90:91:0d:46:88:f8:e0:11:ef:2c:67:25"]
+          fingerprints: ["58:33:41:c7:3f:30:a4:76:24:48:5a:91:f4:2f:ab:c6"]
       - run: yum install -y tar gzip
       - attach_workspace:
           at: ~/

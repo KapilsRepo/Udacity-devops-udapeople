@@ -282,7 +282,7 @@ jobs:
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env" 
             cat backend/.env
-
+            export ANSIBLE_HOST_KEY_CHECKING=False      
             cat ~/project/.circleci/ansible/inventory.txt  
             cd .circleci/ansible/
             ansible-playbook -i inventory.txt configure-server.yml
@@ -417,6 +417,7 @@ jobs:
             # echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
             # echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
             # cat backend/.env
+            export ANSIBLE_HOST_KEY_CHECKING=False      
 
             npm i
             npm run build

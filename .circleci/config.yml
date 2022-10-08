@@ -330,52 +330,37 @@ jobs:
 ##########################
 #### DEPLOY FRONT-END ####
 ##########################  
-  deploy-frontend:
     docker:
-#      - image: circleci/node:13.8.0
       - image: python:3.11-rc-alpine
     steps:
       - checkout
       - attach_workspace:
           at: ~/
-      - restore_cache:
-          keys: [frontend-build]
-#      - run:
-#          name: Install AWS CLI
-#          command: |
-#            sudo apt-get -y -qq update
-#            sudo apt-get -y -qq install python3
-#            sudo apt-get -qq install awscli
       - run:
-          name: Install dependencies
+          name: "Install dependencies"
           command: |
             apk add --update tar gzip ansible nodejs npm curl && \
             pip install awscli
-#            sudo apt-get update -y
-#            sudo apt-get install -y tar
-
       - run:
           name: Get backend url
-          working_directory: /home/circleci/project/frontend
           command: |
-
-            BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)            
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text )
             export API_URL="http://${BACKEND_IP}:3030"
-
-            echo "${BACKEND_IP}"
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
-            echo "API_URL=${API_URL}" >> frontend/.env     
-            cat frontend/.env
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env                
       - run:
-          name: Deploy frontend objects        
+          name: Deploy frontend objects
           command: |
-            cd ~/project/frontend
+            #!/bin/bash -eo pipefail
+            cd frontend
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            tar --list --file=artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}/ --recursive --acl public-read
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment:
           circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:

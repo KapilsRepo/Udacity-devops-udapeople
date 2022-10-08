@@ -330,7 +330,7 @@ jobs:
 ##########################
 #### DEPLOY FRONT-END ####
 ##########################  
-deploy-frontend:
+  deploy-frontend:
     docker:
       - image: python:3.11-rc-alpine
     steps:

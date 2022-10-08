@@ -283,12 +283,9 @@ jobs:
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env" 
             cat backend/.env
 
-            cat ~/project/.circleci/ansible/inventory.txt
-#            export ANSIBLE_HOST_KEY_CHECKING=False      
+            cat ~/project/.circleci/ansible/inventory.txt  
             cd .circleci/ansible/
             ansible-playbook -i inventory.txt configure-server.yml
-#      - destroy-environment:
-#          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
   ##########################

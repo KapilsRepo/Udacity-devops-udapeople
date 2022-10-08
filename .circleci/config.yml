@@ -371,9 +371,6 @@ jobs:
       - run:
           name: Deploy frontend objects        
           command: |
-#            echo ENVIRONMENT=production >> frontend/.env
-#            echo NODE_ENV=production >> frontend/.env       
-              
             cd ~/project/frontend
             npm install
             npm run build

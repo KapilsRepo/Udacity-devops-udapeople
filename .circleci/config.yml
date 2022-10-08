@@ -237,7 +237,7 @@ jobs:
               --output text)
               echo $EC2ip_ADD 
 
-              echo "[web]" > .circleci/ansible/inventory.txt                         
+#              echo "[web]" > .circleci/ansible/inventory.txt                         
               echo "$EC2ip_ADD" >> .circleci/ansible/inventory.txt
               echo "$EC2ip_ADD" > .circleci/output/backend_ip_num.txt  
               cat   .circleci/ansible/inventory.txt
@@ -290,7 +290,7 @@ jobs:
             cat backend/.env
 
             cat ~/project/.circleci/ansible/inventory.txt
-            export ANSIBLE_HOST_KEY_CHECKING=False      
+#            export ANSIBLE_HOST_KEY_CHECKING=False      
             cd .circleci/ansible/
             ansible-playbook -i inventory.txt configure-server.yml
 #      - destroy-environment:
@@ -309,13 +309,13 @@ jobs:
             keys: [backend-build]      
       - attach_workspace:
           at: ~/  
-      - run:                 
-          name: Install dependencies
-          command: |
-            sudo apt-get -y -qq update
-            sudo apt-get -y -qq install python3
-            sudo apt-get -qq install awscli
-            sudo apt-get -y -qq install curl
+#      - run:                 
+#          name: Install dependencies
+#          command: |
+#            sudo apt-get -y -qq update
+#            sudo apt-get -y -qq install python3
+#            sudo apt-get -qq install awscli
+#            sudo apt-get -y -qq install curl
       - run:          
           name: Run migrations
           command: |            
@@ -331,8 +331,8 @@ jobs:
             then
                 curl --insecure https://kvdb.io/6h9wPbrfcMHffrSixfsDx2/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}  -d '1'
             fi
-      - destroy-environment:
-          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
+#      - destroy-environment:
+#          circlewrkflowid: "${CIRCLE_WORKFLOW_ID:0:7}"
       - slack/notify:
           event: fail
           template: basic_fail_1     
@@ -341,24 +341,28 @@ jobs:
 ##########################  
   deploy-frontend:
     docker:
-      - image: circleci/node:13.8.0
+#      - image: circleci/node:13.8.0
+      - image: python:3.11-rc-alpine
     steps:
       - checkout
       - attach_workspace:
           at: ~/
       - restore_cache:
           keys: [frontend-build]
+#      - run:
+#          name: Install AWS CLI
+#          command: |
+#            sudo apt-get -y -qq update
+#            sudo apt-get -y -qq install python3
+#            sudo apt-get -qq install awscli
       - run:
-          name: Install AWS CLI
+          name: Install dependencies
           command: |
-            sudo apt-get -y -qq update
-            sudo apt-get -y -qq install python3
-            sudo apt-get -qq install awscli
-      - run:
-          name: Install tar
-          command: |
-            sudo apt-get update -y
-            sudo apt-get install -y tar
+            apk add --update tar gzip ansible nodejs npm curl && \
+            pip install awscli
+#            sudo apt-get update -y
+#            sudo apt-get install -y tar
+
       - run:
           name: Get backend url
           working_directory: /home/circleci/project/frontend
@@ -371,13 +375,14 @@ jobs:
             echo "${BACKEND_IP}"
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            echo "API_URL=${API_URL}" >> .env     
-            cat .env
+            echo "API_URL=${API_URL}" >> frontend/.env     
+            cat frontend/.env
       - run:
           name: Deploy frontend objects        
           command: |
-            echo ENVIRONMENT=production >> frontend/.env
-            echo NODE_ENV=production >> frontend/.env          
+#            echo ENVIRONMENT=production >> frontend/.env
+#            echo NODE_ENV=production >> frontend/.env       
+              
             cd ~/project/frontend
             npm install
             npm run build
@@ -413,7 +418,18 @@ jobs:
           name: Deploy backend
           command: |
             cd backend
-                        
+            # echo ENVIRONMENT=production >> .env
+            # echo TYPEORM_CONNECTION=postgres >> .env
+            # echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> .env
+            # echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> .env
+            # echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> .env
+            # echo TYPEORM_HOST=$TYPEORM_HOST >> ".env"
+            # echo TYPEORM_PORT=$TYPEORM_PORT >> ".env"
+            # echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ".env"
+            # echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
+            # echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
+            # cat backend/.env
+
             npm i
             npm run build
             cd ..

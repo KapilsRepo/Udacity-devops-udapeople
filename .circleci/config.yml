@@ -579,7 +579,7 @@ workflows:
           requires: [deploy-frontend]
       - Smoke-test:
           requires: [deploy-backend, deploy-frontend]
-      - Promotion-Phase:
+      - cloudfront-update:
           requires: [Smoke-test]
       - cleanup:
-          requires: [Promotion-Phase]
+          requires: [cloudfront-update]

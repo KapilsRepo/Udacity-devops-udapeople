@@ -1,13 +1,7 @@
-[URL011]:https://github.com/KapilsRepo/Udacity-devops-udapeople
-[URL02]:http://udapeople-39cdaac.s3-website-us-east-1.amazonaws.com/
-
-
-2. circle ci
-
 https://app.circleci.com/pipelines/github/KapilsRepo
 
 [URL01]: https://github.com/M-Elwy/cdond-c3-projectstarter
 [URL02]: http://udapeople-b570285.s3-website-us-west-2.amazonaws.com
-[URL03]: http://d1qxv3bz7ubvfi.cloudfront.net
-[URL04]: http://ec2-18-236-161-12.us-west-2.compute.amazonaws.com:3030/
-[URL05]: http://ec2-34-220-127-91.us-west-2.compute.amazonaws.com:9090/
+[URL03]: http://d55byicc10hlk.cloudfront.net/#/employees
+[URL04]: http://18.204.215.251:3030/api/status
+[URL05]: http://ec2-3-87-2-110.compute-1.amazonaws.com:9090/service-discovery
